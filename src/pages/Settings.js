@@ -32,6 +32,7 @@ const fakeIgnoreBodyParts = ["Joints","Trapezius","palms"]
 
 export default function Settings(props){
     const { UserID, BodyPosition, Difficulty, ExerciseInterval, IgnoreExercises, Location, DeliveryMethod} = props.data
+    const  horizontal  = props.horizontal
 
     const [bodyPartDifficulty, setBodyPartDifficulty] = useState([])
     const [formattedBodyPartDiff, setFormattedBodyPartDiff] = useState([])
@@ -199,7 +200,7 @@ export default function Settings(props){
     
     return(
         <Box sx={{flexGrow : 1}}>
-            <Grid container spacing={2} columnSpacing={5}>
+            <Grid container spacing={2} columnSpacing={5} direction = {horizontal ? "row" : 'column'}>
                 <Grid item xs={6}>
                     <Card>
                         <CardContent>

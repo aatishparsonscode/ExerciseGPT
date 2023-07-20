@@ -48,6 +48,8 @@ function createData({exerciseName, timestamp}){
 export default function Dashboard(props){
     const { UserID, ExerciseInterval, LastExerciseTime } = props.data
 
+    const  horizontal  = props.horizontal
+
     const [exerciseLogs, setExerciseLogs] = useState([])
     const [skippedBodyParts, setSkippedBodyParts] = useState([])
 
@@ -146,12 +148,12 @@ export default function Dashboard(props){
     }
 
     
-    
+    console.log("IS HORIZONTAL", horizontal)
     return(
         <Box sx={{minWidth : '100%'}}>
-            <Grid container spacing={2} columnSpacing={5}>
+            <Grid container spacing={2} columnSpacing={5} direction = {horizontal ? "row" : 'column-reverse'}>
                 <Grid item xs={6} >
-                <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+                    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
                     <TableContainer sx={{ maxHeight: window.innerHeight - 100}} >
                         <CardContent>
                             <Typography variant="h5" component="div">
@@ -179,14 +181,13 @@ export default function Dashboard(props){
                     </TableContainer>
                     </Paper>
                 </Grid>
-                <Grid item xs={0.1}></Grid>
-                <Grid xs={5} container direction="column" justifyContent='flex-start' alignItems='flex-start'>
-                    <Grid item xs={0.3}></Grid>
-                    <Grid item xs={3}>
+                <Grid xs={6} item >
+                   
+                    <Grid item xs={12}>
                         <Card sx={{ minWidth: 275 }}>
                             <CardContent>
                                 <Typography variant="h4" component="div">
-                                Want to get ahead?
+                                    Need a break?
                                 </Typography>
                                 <CardMedia
                                     

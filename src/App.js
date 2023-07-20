@@ -65,10 +65,16 @@ function App({ signOut, user }) {
   const [value, setValue] = useState(0)
   const [loading, setLoading] = useState(true)
   const [userPulledData, setUserPulledData] = useState(null)
+  const [isHorizontal, setHorizontal] = useState(true)
 
+  const checkHorizontal = () => {
+    console.log(window.innerWidth, window.innerHeight)
+    return (window.innerHeight < window.innerWidth)
+  }
   useEffect(() => {
     async function setupUser(UserID){
-     
+      setHorizontal(checkHorizontal())
+      console.log("CHECKED HORIZONTAL", checkHorizontal())
       let userData = (await getUser(UserID))
       if(userData === null){ //doesn't exist in DB
         const creationData = await createUser(UserID, email)
@@ -230,10 +236,10 @@ else{
             /> */}
         </Tabs>
         <CustomTabPanel value={value} index={0}>
-          <Dashboard data={userPulledData}/>
+          <Dashboard data={userPulledData} horizontal = {isHorizontal}/>
         </CustomTabPanel>
         <CustomTabPanel value={value} index={1}>
-          <Settings data={userPulledData} />
+          <Settings data={userPulledData} horizontal = {isHorizontal}/>
         </CustomTabPanel>
       </Box>
         {/* <Routes>
