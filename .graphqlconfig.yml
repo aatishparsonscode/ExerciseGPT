@@ -1,0 +1,18 @@
+projects:
+  ExerciseGPT_API:
+    schemaPath: src/graphql/schema.json
+    includes:
+      - src/graphql/**/*.js
+    excludes:
+      - ./amplify/**
+    extensions:
+      amplify:
+        codeGenTarget: javascript
+        generatedFileName: ''
+        docsFilePath: src/graphql
+        region: us-west-2
+        apiId: o2jzjdxkrzbkpkvrn76iwyhiei
+        maxDepth: 2
+extensions:
+  amplify:
+    version: 3
