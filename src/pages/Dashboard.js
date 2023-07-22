@@ -138,7 +138,8 @@ export default function Dashboard(props){
               variables: {
                 input : {
                     UserID : UserID,
-                    LastExerciseTime : 0
+                    LastExerciseTime : 0,
+                    RequestedExercise: true
                 }
               }
             })
@@ -187,7 +188,7 @@ export default function Dashboard(props){
                 <Grid xs={5} item >
                    
                     <Grid item xs={12}>
-                        <Card sx={{ minWidth: 275 }}>
+                        <Card>
                             <CardContent>
                                 
                                 <CardMedia

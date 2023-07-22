@@ -208,6 +208,7 @@ export default function Settings(props){
                 const data = res.json()
                 console.log(data)
                 alert("Updated!")
+                window.location.reload()
               })
         }else{
             alert("Your start receiving must be before end")
@@ -228,18 +229,22 @@ export default function Settings(props){
     }
 
     const handleDateChangeStart = event => {
+        const copyEvent = event
         const eventDateJS = event.toDate()
         eventDateJS.setUTCDate(new Date().getUTCDate())
         setWindowStart(getHourMinsFromUTC(eventDateJS))
+        setWindowStartLocalUX(copyEvent)
         
         console.log("handle event change start")
     }
 
     const handleDateChangeEnd = event => {
+        const copyEvent = event
         const eventDateJS = event.toDate()
         eventDateJS.setUTCDate(new Date().getUTCDate())
         setWindowEnd(getHourMinsFromUTC(eventDateJS))
         console.log("handle event change end")
+        setWindowEndLocalUX(copyEvent)
     }
 
     const getHourMinsFromUTC = (dateVal) => {
@@ -266,7 +271,7 @@ export default function Settings(props){
             <p>Loading...</p>
         )
     }
-    
+    console.log(windowStartLocalUX, windowEndLocalUX)
     return(
         <Box sx={{flexGrow : 1}}>
             <Grid container spacing={2} columnSpacing={5} direction = {horizontal ? "row" : 'column'}>

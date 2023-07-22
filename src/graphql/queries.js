@@ -90,6 +90,7 @@ export const getUsersExercise = /* GraphQL */ `
       WindowStartHour
       WindowEndHour
       WindowDays
+      RequestedExercise
       __typename
     }
   }
@@ -116,6 +117,7 @@ export const listUsersExercises = /* GraphQL */ `
         WindowStartHour
         WindowEndHour
         WindowDays
+        RequestedExercise
         __typename
       }
       nextToken

@@ -123,6 +123,7 @@ function App({ signOut, user }) {
         }
       })
     }).then(async res => {
+      console.log(res, "user get")
       data = (await res.json()).data.getUsersExercise
       console.log(data, "user data")
     })
@@ -162,12 +163,14 @@ function App({ signOut, user }) {
             DeliveryMethod: "EMAIL",
             WindowStartHour: WindowStartSummed,
             WindowEndHour: WindowEndSummed,
-            WindowDays: [false, true,true,true,true,true,false] //Weekdays only
+            WindowDays: [false, true,true,true,true,true,false], //Weekdays only
+            RequestedExercise: false
           } 
         }
       })
     }).then(async res => {
       data = await res.json()
+      console.log(data, "Creation call data")
       //[{"key" : "Latissimus dorsi", "value" : "EASY"}, {"key" : "Quadriceps", "value" : "EASY"}],
     })
     return data.data.createUsersExercise
