@@ -90,6 +90,9 @@ export const createUsersExercise = /* GraphQL */ `
       PrevExercise
       SkippedExercises
       DeliveryMethod
+      WindowStartHour
+      WindowEndHour
+      WindowDays
       __typename
     }
   }
@@ -108,6 +111,9 @@ export const updateUsersExercise = /* GraphQL */ `
       PrevExercise
       SkippedExercises
       DeliveryMethod
+      WindowStartHour
+      WindowEndHour
+      WindowDays
       __typename
     }
   }
@@ -126,6 +132,9 @@ export const deleteUsersExercise = /* GraphQL */ `
       PrevExercise
       SkippedExercises
       DeliveryMethod
+      WindowStartHour
+      WindowEndHour
+      WindowDays
       __typename
     }
   }

@@ -44,6 +44,15 @@ function CustomTabPanel(props) {
   );
 }
 
+function convertLocalToUniversalDate(dateLocal){
+  console.log(dateLocal, "date")
+  const date = new Date(dateLocal)
+  let utc = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(),
+                  date.getUTCDate(), date.getUTCHours(),
+                  date.getUTCMinutes(), date.getUTCSeconds());
+  return new Date(utc)
+}
+
 CustomTabPanel.propTypes = {
   children: PropTypes.node,
   index: PropTypes.number.isRequired,
@@ -87,7 +96,7 @@ function App({ signOut, user }) {
       // Difficulty will be stringified!
     }
     if(sub !== null){
-      console.log("running setup")
+      console.log("running setup", sub, email)
       setupUser(sub)
     }
     console.log(sub, "USE EFFECT")
@@ -123,6 +132,14 @@ function App({ signOut, user }) {
   const createUser = async (UUID, email) => {
     console.log("CREATING USER")
     let data = null
+    const WindowStartLocal = new Date().setHours(10,0)
+    const WindowEndLocal = new Date().setHours(16,0)
+    const WindowStartUTC = convertLocalToUniversalDate(WindowStartLocal)
+    const WindowEndUTC = convertLocalToUniversalDate(WindowEndLocal)
+    
+    const WindowStartSummed = WindowStartUTC.getUTCHours() * 60 + WindowStartUTC.getUTCMinutes()
+    const WindowEndSummed = WindowEndUTC.getUTCHours() * 60 + WindowEndUTC.getUTCMinutes()
+
     await fetch(awsExports.aws_appsync_graphqlEndpoint, {
       method : 'POST',
       headers: {'Content-Type': 'application/json',
@@ -142,7 +159,10 @@ function App({ signOut, user }) {
             Location : "office",
             PrevExercise: "none",
             SkippedExercises: [],
-            DeliveryMethod: "EMAIL"
+            DeliveryMethod: "EMAIL",
+            WindowStartHour: WindowStartSummed,
+            WindowEndHour: WindowEndSummed,
+            WindowDays: [false, true,true,true,true,true,false] //Weekdays only
           } 
         }
       })

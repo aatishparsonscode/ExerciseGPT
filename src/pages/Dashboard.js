@@ -30,6 +30,8 @@ import awsExports from '../aws-exports';
 import { listExerciseLogs } from '../graphql/queries';
 import { updateUsersExercise } from '../graphql/mutations';
 
+import logo from '../assets/logo.png'
+
 const fakeExerciseLog =     ["bicep","tricep","trapezius"]
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -41,7 +43,8 @@ const Item = styled(Paper)(({ theme }) => ({
   }));
 
 function createData({exerciseName, timestamp}){
-    const dateLocal = new Date(timestamp).toUTCString()
+    const dateObj = new Date(timestamp)
+    const dateLocal = dateObj.toLocaleTimeString(undefined, {timeStyle:'short'}) + " " + dateObj.toLocaleDateString()
     return {exerciseName, dateLocal}
 }
 
@@ -181,20 +184,20 @@ export default function Dashboard(props){
                     </TableContainer>
                     </Paper>
                 </Grid>
-                <Grid xs={6} item >
+                <Grid xs={5} item >
                    
                     <Grid item xs={12}>
                         <Card sx={{ minWidth: 275 }}>
                             <CardContent>
+                                
+                                <CardMedia
+                                    src={logo}
+                                    component="img"
+                                    sx={{width : 1}}
+                                />
                                 <Typography variant="h4" component="div">
                                     Need a break?
                                 </Typography>
-                                <CardMedia
-                                    
-                                    component="img"
-                                    image="https://media.istockphoto.com/id/1317230227/video/male-doing-office-yoga-exercise-sit-up-and-stretch.jpg?s=640x640&k=20&c=aHEt-t3TyG8Yu9VP3mPIaRntevcMQ0JJDoOU1ER17zI="
-                                />
-                                
                             </CardContent>
                             <CardActions>
                                 <Button variant="contained" onClick={() => requestExerciseEarly()}>

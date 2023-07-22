@@ -10,6 +10,14 @@ import Slider from '@mui/material/Slider';
 import Box from '@mui/material/Box'
 import { styled } from '@mui/material/styles';
 import Grid from '@mui/material/Grid';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+import dayjs from 'dayjs';
+import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 
 import { useState, useEffect } from 'react';
 import { CardContent, Typography } from '@mui/material';
@@ -31,7 +39,7 @@ const fakeIgnoreBodyParts = ["Joints","Trapezius","palms"]
 
 
 export default function Settings(props){
-    const { UserID, BodyPosition, Difficulty, ExerciseInterval, IgnoreExercises, Location, DeliveryMethod} = props.data
+    const { UserID, BodyPosition, Difficulty, ExerciseInterval, IgnoreExercises, Location, DeliveryMethod, WindowStartHour, WindowEndHour,WindowDays} = props.data
     const  horizontal  = props.horizontal
 
     const [bodyPartDifficulty, setBodyPartDifficulty] = useState([])
@@ -44,6 +52,12 @@ export default function Settings(props){
     const [location, setLocation] = useState(null)
 
     const [loading, setLoading] = useState(true)
+
+    const [daysChecked, setDaysChecked] = useState([false, false,false,false,false,false,false])
+    const [windowStartLocalUX, setWindowStartLocalUX] = useState()
+    const [windowEndLocalUX, setWindowEndLocalUX] = useState()
+    const [windowStart, setWindowStart] = useState(null)
+    const [windowEnd, setWindowEnd] = useState(null)
 
     useEffect(() => {
         // retrieve settings here
@@ -58,6 +72,11 @@ export default function Settings(props){
         setExerciseInterval(ExerciseInterval)
         setBodyPosition(BodyPosition)
         setLocation(Location)
+        setDaysChecked(WindowDays)
+        setWindowStartLocalUX(convertDBtimeToDate(WindowStartHour))
+        setWindowEndLocalUX(convertDBtimeToDate(WindowEndHour))
+        setWindowStart(WindowStartHour)
+        setWindowEnd(WindowEndHour)
     },[])
 
     useEffect(() => {
@@ -164,34 +183,84 @@ export default function Settings(props){
     }
 
     const updateSettings = async () => {
-        await fetch(awsExports.aws_appsync_graphqlEndpoint, {
-            method : 'POST',
-            headers: {'Content-Type': 'application/json',
-                      'x-api-key' : 'da2-l25ddq7nvbghfbdp7imeg36ssi'
-                    },
-            body : JSON.stringify({
-              query: updateUsersExercise,
-              variables: {
-                input : {
-                    UserID : UserID,
-                    ExerciseInterval : exerciseInterval,
-                    DeliveryMethod : deliveryMethod,
-                    IgnoreExercises : ignoreExercises,
-                    Difficulty : convertFormattedDifficultyBackToMap(formattedBodyPartDiff)
-                }
-              }
-            })
-          }).then(async res => {
-            const data = res.json()
-            console.log(data)
-            alert("Updated!")
-          })
+        if(windowStart < windowEnd){
+            await fetch(awsExports.aws_appsync_graphqlEndpoint, {
+                method : 'POST',
+                headers: {'Content-Type': 'application/json',
+                          'x-api-key' : 'da2-l25ddq7nvbghfbdp7imeg36ssi'
+                        },
+                body : JSON.stringify({
+                  query: updateUsersExercise,
+                  variables: {
+                    input : {
+                        UserID : UserID,
+                        ExerciseInterval : exerciseInterval,
+                        DeliveryMethod : deliveryMethod,
+                        IgnoreExercises : ignoreExercises,
+                        Difficulty : convertFormattedDifficultyBackToMap(formattedBodyPartDiff),
+                        WindowDays : daysChecked,
+                        WindowStartHour : windowStart,
+                        WindowEndHour : windowEnd
+                    }
+                  }
+                })
+              }).then(async res => {
+                const data = res.json()
+                console.log(data)
+                alert("Updated!")
+              })
+        }else{
+            alert("Your start receiving must be before end")
+        }
+        
     }
 
     const handleIntervalSliderChange = (event) => {
         console.log(event)
         setExerciseInterval(event.target.value)
     }
+
+    const handleDayClick = (dayIndex) => {
+        console.log(dayIndex)
+        let days = daysChecked
+        days[dayIndex] = !days[dayIndex]
+        setDaysChecked([...daysChecked])
+    }
+
+    const handleDateChangeStart = event => {
+        const eventDateJS = event.toDate()
+        eventDateJS.setUTCDate(new Date().getUTCDate())
+        setWindowStart(getHourMinsFromUTC(eventDateJS))
+        
+        console.log("handle event change start")
+    }
+
+    const handleDateChangeEnd = event => {
+        const eventDateJS = event.toDate()
+        eventDateJS.setUTCDate(new Date().getUTCDate())
+        setWindowEnd(getHourMinsFromUTC(eventDateJS))
+        console.log("handle event change end")
+    }
+
+    const getHourMinsFromUTC = (dateVal) => {
+        const dateIn = new Date(dateVal)
+        const res = dateIn.getUTCHours() * 60 + dateIn.getUTCMinutes()
+        console.log(res)
+        return res
+    }
+
+    const convertDBtimeToDate = (hourMins) => {
+        const UTCHours = Math.floor(hourMins / 60)
+        const UTCMins = hourMins - UTCHours * 60
+        let dateVal = new Date()
+        dateVal.setUTCHours(UTCHours)
+        dateVal.setUTCMinutes(UTCMins)
+        console.log("Date VAl" , dateVal)
+        const res =  new Date(dateVal)
+        return dayjs(res)
+        
+    }
+
     if(loading){
         return(
             <p>Loading...</p>
@@ -201,69 +270,31 @@ export default function Settings(props){
     return(
         <Box sx={{flexGrow : 1}}>
             <Grid container spacing={2} columnSpacing={5} direction = {horizontal ? "row" : 'column'}>
-                <Grid item xs={6}>
+            <Grid item xs={4}>
                     <Card>
+                        
                         <CardContent>
                             <Typography variant="h5" component="div">
-                                Difficulty By BodyPart
+                                Scheduled Days
                             </Typography>
-                            <List>
-                                {formattedBodyPartDiff.map(item => {
-                                    return(
-                                        <>
-                                        <ListItem>
-                                            {item.bodyPart} - {item.difficulty} 
-                                            
-                                        </ListItem>
-                                        <ListItem>
-                                            <ButtonGroup variant="outlined" aria-label="outlined primary button group">
-                                                <Button onClick={() => changeDifficulty(item, "Easy")}>EASY</Button>
-                                                <Button onClick={() => changeDifficulty(item, "Medium")}>MEDIUM</Button>
-                                                <Button onClick={() => changeDifficulty(item, "Hard")}>HARD</Button>
-                                            </ButtonGroup>
-                                        </ListItem>
-                                        </>
-                                    )
-                                    
-                                })}
-                            </List>
+                            <FormGroup>
+                                <FormControlLabel control={<Checkbox defaultChecked checked={daysChecked[0]} onClick={() => handleDayClick(0)}/>} label="Sunday" />
+                                <FormControlLabel control={<Checkbox defaultChecked checked={daysChecked[1]} onClick={() => handleDayClick(1)}/>} label="Monday" />
+                                <FormControlLabel control={<Checkbox defaultChecked checked={daysChecked[2]} onClick={() => handleDayClick(2)}/>} label="Tuesday" />
+                                <FormControlLabel control={<Checkbox defaultChecked checked={daysChecked[3]} onClick={() => handleDayClick(3)}/>} label="Wednesday" />
+                                <FormControlLabel control={<Checkbox defaultChecked checked={daysChecked[4]} onClick={() => handleDayClick(4)}/>} label="Thursday" />
+                                <FormControlLabel control={<Checkbox defaultChecked checked={daysChecked[5]} onClick={() => handleDayClick(5)}/>} label="Friday" />
+                                <FormControlLabel control={<Checkbox defaultChecked checked={daysChecked[6]} onClick={() => handleDayClick(6)}/>} label="Saturday" />
+                            </FormGroup>
                         </CardContent>
-                    </Card>
-                </Grid>
-                <Grid item xs={6}>
-                    <Card>
                         <CardContent>
-                            <Typography variant="h5" component="div">
-                                Body Parts Blacklisted
-                            </Typography>
-                            <List>
-                                {formattedIgnoredBodyParts.map(item => {
-                                    console.log(item)
-                                    if(item.ignoring){
-                                        return(
-                                            <ListItem>
-                                                {item.bodyPart}
-                                                <Button onClick={() => toggleEnableDisableExercise(item)}>
-                                                     Enable
-                                                </Button>
-                                                
-                                            </ListItem>
-                                        )
-                                    }else{
-                                        return(
-                                            <ListItem>
-                                                {item.bodyPart}
-                                                <Button onClick={() => toggleEnableDisableExercise(item)}>
-                                                     Disable
-                                                </Button>
-                                            </ListItem>
-                                        )
-                                    }
-                                    
-                                })}
-                            </List>
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                            <DemoContainer components={['TimePicker']}>
+                                <TimePicker value={windowStartLocalUX} onChange={handleDateChangeStart} label="Start Receiving" />
+                                <TimePicker value={windowEndLocalUX} onChange={handleDateChangeEnd} label="End Receiving" />
+                            </DemoContainer>
+                        </LocalizationProvider>
                         </CardContent>
-                    
                         <CardContent>
                             <Typography variant="h5" component="div">
                                 Duration between exercises
@@ -293,6 +324,83 @@ export default function Settings(props){
                                 Delivery Method: {deliveryMethod}
                             </Typography>
                             </CardContent>
+                        </CardContent>
+                        <CardContent>
+                            <Button variant='contained' onClick={() => updateSettings()}>
+                                Save
+                            </Button>
+                        </CardContent>
+                       
+                    </Card>
+                </Grid>
+                
+                <Grid item xs={4}>
+                    <Card>
+                        <CardContent>
+                            <Typography variant="h5" component="div">
+                                Difficulty By BodyPart
+                            </Typography>
+                            <List>
+                                {formattedBodyPartDiff.map(item => {
+                                    return(
+                                        <>
+                                        <ListItem>
+                                            {item.bodyPart} - {item.difficulty} 
+                                            
+                                        </ListItem>
+                                        <ListItem>
+                                            <ButtonGroup variant="outlined" aria-label="outlined primary button group">
+                                                <Button onClick={() => changeDifficulty(item, "Easy")}>EASY</Button>
+                                                <Button onClick={() => changeDifficulty(item, "Medium")}>MEDIUM</Button>
+                                                <Button onClick={() => changeDifficulty(item, "Hard")}>HARD</Button>
+                                            </ButtonGroup>
+                                        </ListItem>
+                                        </>
+                                    )
+                                    
+                                })}
+                            </List>
+                        </CardContent>
+                        <CardContent>
+                            <Button variant='contained' onClick={() => updateSettings()}>
+                                Save
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </Grid>
+                
+                <Grid item xs={4}>
+                    <Card>
+                    <CardContent>
+                            <Typography variant="h5" component="div">
+                                Body Parts Blacklisted
+                            </Typography>
+                            <List>
+                                {formattedIgnoredBodyParts.map(item => {
+                                    
+                                    if(item.ignoring){
+                                        return(
+                                            <ListItem>
+                                                {item.bodyPart}
+                                                <Button onClick={() => toggleEnableDisableExercise(item)}>
+                                                     Enable
+                                                </Button>
+                                                
+                                            </ListItem>
+                                        )
+                                    }else{
+                                        return(
+                                            <ListItem>
+                                                {item.bodyPart}
+                                                <Button onClick={() => toggleEnableDisableExercise(item)}>
+                                                     Disable
+                                                </Button>
+                                            </ListItem>
+                                        )
+                                    }
+                                    
+                                })}
+                            </List>
                         </CardContent>
                         <CardContent>
                             <Button variant='contained' onClick={() => updateSettings()}>
