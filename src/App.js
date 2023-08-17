@@ -22,6 +22,9 @@ import PropTypes from 'prop-types';
 //other
 import {BODY_PARTS_DEFAULT_DIFFICULTY} from './bodyParts'
 
+import SlackSetup from './pages/SlackSetup';
+import GoogleCalendarSetup from './pages/GoogleCalendarSetup';
+
 Amplify.configure(awsExports);
 
 function CustomTabPanel(props) {
@@ -84,18 +87,29 @@ function App({ signOut, user }) {
     async function setupUser(UserID){
       setHorizontal(checkHorizontal())
       console.log("CHECKED HORIZONTAL", checkHorizontal())
-      let userData = (await getUser(UserID))
-      if(userData === null){ //doesn't exist in DB
-        const creationData = await createUser(UserID, email)
-        userData = creationData
-        alert("Welcome! Head over to settings if you want to make any changes to the default configuration.")
+      let getUserData = (await getUser(UserID))
+      
+      let userData = getUserData.data
+      let userStatus = getUserData.status
+      if(userStatus !== 200){
+        alert("Bad connection, please try again")
+      }else{
+        if(userData === null && userStatus === 200){ //doesn't exist in DB
+          const creationData = await createUser(UserID, email)
+          console.log(creationData, "creation Data")
+          userData = creationData
+          //alert("Welcome! Head over to settings if you want to make any changes to the default configuration.")
+          
+        }
+        setUserPulledData(userData)
+        console.log(userData, "After setup data")
       }
-      setUserPulledData(userData)
-      console.log(userData, "After setup data")
+      
 
       // Difficulty will be stringified!
     }
     if(sub !== null){
+      //signOut()
       console.log("running setup", sub, email)
       setupUser(sub)
     }
@@ -111,6 +125,7 @@ function App({ signOut, user }) {
   const getUser = async (UUID) => {
     console.log("SEARCHIGN FOR: ", UUID)
     let data = null
+    let status = null
     await fetch(awsExports.aws_appsync_graphqlEndpoint, {
       method : 'POST',
       headers: {'Content-Type': 'application/json',
@@ -124,15 +139,19 @@ function App({ signOut, user }) {
       })
     }).then(async res => {
       console.log(res, "user get")
-      data = (await res.json()).data.getUsersExercise
-      console.log(data, "user data")
+      status = res.status
+      if(res.ok){
+        data = (await res.json()).data.getUsersExercise
+        console.log(data, "user data")
+      }
+      
     })
-    return data
+    return {data : data, status : status }
   }
 
   const createUser = async (UUID, email) => {
     console.log("CREATING USER")
-    let data = null
+    
     const WindowStartLocal = new Date().setHours(10,0)
     const WindowEndLocal = new Date().setHours(16,0)
     const WindowStartUTC = convertLocalToUniversalDate(WindowStartLocal)
@@ -141,7 +160,7 @@ function App({ signOut, user }) {
     const WindowStartSummed = WindowStartUTC.getUTCHours() * 60 + WindowStartUTC.getUTCMinutes()
     const WindowEndSummed = WindowEndUTC.getUTCHours() * 60 + WindowEndUTC.getUTCMinutes()
 
-    await fetch(awsExports.aws_appsync_graphqlEndpoint, {
+    const response = await fetch(awsExports.aws_appsync_graphqlEndpoint, {
       method : 'POST',
       headers: {'Content-Type': 'application/json',
                 'x-api-key' : 'da2-l25ddq7nvbghfbdp7imeg36ssi'
@@ -154,7 +173,7 @@ function App({ signOut, user }) {
             BodyPosition : "Standing",
             Difficulty : BODY_PARTS_DEFAULT_DIFFICULTY, 
             Email : email,
-            ExerciseInterval : 45,
+            ExerciseInterval : 60,
             IgnoreExercises : [],
             LastExerciseTime : 0,
             Location : "office",
@@ -168,108 +187,70 @@ function App({ signOut, user }) {
           } 
         }
       })
-    }).then(async res => {
-      data = await res.json()
-      console.log(data, "Creation call data")
-      //[{"key" : "Latissimus dorsi", "value" : "EASY"}, {"key" : "Quadriceps", "value" : "EASY"}],
-    })
-    return data.data.createUsersExercise
+    })//.then(async res => {
+    //   data = await res.json()
+    //   console.log(data, "Creation call data")
+
+    //   //[{"key" : "Latissimus dorsi", "value" : "EASY"}, {"key" : "Quadriceps", "value" : "EASY"}],
+    // })
+    const jsonData = await response.json()
+    return jsonData.data.createUsersExercise
+    // console.log(jsonData, "Data before ok check create user")
+    // if(jsonData.ok){
+    //   return {data : jsonData.data.createUsersExercise, status : jsonData.status }
+    // }else{
+    //   return {data : null, status : jsonData.status }
+    // }
+    
   }
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
 
-  const graphCall = async () => {
-    await fetch(awsExports.aws_appsync_graphqlEndpoint, {
-      method : 'POST',
-      headers: {'Content-Type': 'application/json',
-                'x-api-key' : 'da2-l25ddq7nvbghfbdp7imeg36ssi'
-              },
-      body : JSON.stringify({
-        query: listUsersExercises,
-        // variables: {
-        //   UserID : "abcde"
-        // }
-      })
-    }).then(async res => {
-      const data = res.json()
-      console.log(data)
-    })
-  }
 
-  const graphCallList = async () => {
-    await fetch(awsExports.aws_appsync_graphqlEndpoint, {
-      method : 'POST',
-      headers: {'Content-Type': 'application/json',
-                'x-api-key' : 'da2-l25ddq7nvbghfbdp7imeg36ssi'
-              },
-      body : JSON.stringify({
-        query: listExerciseLogs,
-        // variables: {
-        //   UserID : "abcde",
-        //   timestamp : 1689288107105
-        // }
-      })
-    }).then(async res => {
-      const data = res.json()
-      console.log(data)
-    })
-  }
 
-  const graphMutationUser = async () => {
-    await fetch(awsExports.aws_appsync_graphqlEndpoint, {
-      method : 'POST',
-      headers: {'Content-Type': 'application/json',
-                'x-api-key' : 'da2-l25ddq7nvbghfbdp7imeg36ssi'
-              },
-      body : JSON.stringify({
-        query: createUsersExercise,
-        variables: {
-          input: {
-            UserID : "abcdefg"
-          } 
-        }
-      })
-    }).then(async res => {
-      const data = res.json()
-      console.log(data)
-    })
-  }
-  // useEffect(() => {
-  //   graphCall()
-  //   graphCallList()
-  //   graphMutationUser()
-  // },[])
+  
 if(loading){
-  return <p>Loading...</p>
+  return(
+    <Box>
+      <h4>Loading...</h4>
+      <p>Retrieving data.</p>
+    </Box>
+  ) 
 }
 else{
 
   console.log(userPulledData, "DATA BEING SENT")
   return (
-    <Box sx= {{width : '100%'}}>
-      <Box sx={{borderBottom : 1, borderColor: 'divider'}}>
-        <Tabs value={value} onChange={handleChange} aria-label="tabs">
-          <Tab label="Dashboard" {...a11yProps(0)}
-            />
-          <Tab label="Settings" {...a11yProps(0)}
-            />
-          {/* <Tab label="Payments" {...a11yProps(0)}
-            /> */}
-        </Tabs>
-        <CustomTabPanel value={value} index={0}>
-          <Dashboard data={userPulledData} horizontal = {isHorizontal}/>
-        </CustomTabPanel>
-        <CustomTabPanel value={value} index={1}>
-          <Settings data={userPulledData} horizontal = {isHorizontal}/>
-        </CustomTabPanel>
-      </Box>
-        {/* <Routes>
-        <Route path='/' element={<Dashboard/>}></Route>
-        <Route path='Settings' element={<Settings/>}></Route>
-      </Routes> */}
-    </Box>
+    <Routes>
+      <Route path='/' element={<Box sx= {{width : '100%'}}>
+        <Box sx={{borderBottom : 1, borderColor: 'divider'}}>
+          <Tabs value={value} onChange={handleChange} aria-label="tabs">
+            <Tab label="Dashboard" {...a11yProps(0)}
+              />
+            <Tab label="Settings" {...a11yProps(0)}
+              />
+            {/* <Tab label="Payments" {...a11yProps(0)}
+              /> */}
+          </Tabs>
+          <CustomTabPanel value={value} index={0}>
+            <Dashboard data={userPulledData} horizontal = {isHorizontal}/>
+          </CustomTabPanel>
+          <CustomTabPanel value={value} index={1}>
+            <Settings data={userPulledData} horizontal = {isHorizontal}/>
+          </CustomTabPanel>
+        </Box>
+          {/* <Routes>
+          <Route path='/' element={<Dashboard/>}></Route>
+          <Route path='Settings' element={<Settings/>}></Route>
+        </Routes> */}
+      </Box>}
+      />
+      <Route path='slacksetup' element={<SlackSetup UserID = {sub}/>}></Route>
+      <Route path='googlecalendarsetup' element={<GoogleCalendarSetup UserID = {sub}/>}></Route>
+    </Routes>
+    
   );
 }
 }

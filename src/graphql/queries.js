@@ -8,6 +8,8 @@ export const getExerciseLog = /* GraphQL */ `
       timestamp
       exerciseName
       bodyPart
+      completed
+      timestampCompleted
       __typename
     }
   }
@@ -30,6 +32,8 @@ export const listExerciseLogs = /* GraphQL */ `
         timestamp
         exerciseName
         bodyPart
+        completed
+        timestampCompleted
         __typename
       }
       nextToken

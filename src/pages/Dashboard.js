@@ -20,6 +20,11 @@ import { styled } from '@mui/material/styles';
 import Grid from '@mui/material/Grid';
 import TablePagination from '@mui/material/TablePagination';
 import CardMedia from '@mui/material/CardMedia'
+import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import dayjs from 'dayjs';
 
 import { useState, useEffect } from 'react';
 
@@ -49,7 +54,7 @@ function createData({exerciseName, timestamp}){
 }
 
 export default function Dashboard(props){
-    const { UserID, ExerciseInterval, LastExerciseTime } = props.data
+    const { UserID, ExerciseInterval, LastExerciseTime, WindowStartHour, WindowEndHour,WindowDays } = props.data
 
     const  horizontal  = props.horizontal
 
@@ -80,6 +85,22 @@ export default function Dashboard(props){
             return 1
         }else{
             return res
+        }
+    }
+
+    const getTimeToLastExercise = () => {
+        if(LastExerciseTime < 100){
+            return ""
+        }
+        const now = new Date().getTime()
+        const diffMilli = now - LastExerciseTime
+        const res = Math.floor(diffMilli/60000) //mins
+        const hours = Math.floor(res/60)
+        const mins = res % 60
+        if(hours > 0){
+            return "Time since last exercise: " + hours + " hour(s) " + mins + " minutes"
+        }else{
+            return "Time since last exercise: " + mins + " minutes"
         }
     }
 
@@ -127,6 +148,18 @@ export default function Dashboard(props){
         //TODO
     }
 
+    const convertDBtimeToDate = (hourMins) => {
+        const UTCHours = Math.floor(hourMins / 60)
+        const UTCMins = hourMins - UTCHours * 60
+        let dateVal = new Date()
+        dateVal.setUTCHours(UTCHours)
+        dateVal.setUTCMinutes(UTCMins)
+        console.log("Date VAl" , dateVal)
+        const res =  new Date(dateVal)
+        return dayjs(res)
+        
+    }
+
     const requestExerciseEarly = async () => {
         await fetch(awsExports.aws_appsync_graphqlEndpoint, {
             method : 'POST',
@@ -138,7 +171,6 @@ export default function Dashboard(props){
               variables: {
                 input : {
                     UserID : UserID,
-                    LastExerciseTime : 0,
                     RequestedExercise: true
                 }
               }
@@ -151,21 +183,31 @@ export default function Dashboard(props){
         console.log("Requesting early exercise")
     }
 
+    const checkIfDayIncluded = () => {
+        const day = new Date().getDay()
+        const dayIncluded = WindowDays[day]
+        if(dayIncluded){
+            return "Active Today"
+        }else{
+            return "Inactive Today"
+        }
+    }
+
     
     console.log("IS HORIZONTAL", horizontal)
     return(
-        <Box sx={{minWidth : '100%'}}>
+        <Box>
             <Grid container spacing={2} columnSpacing={5} direction = {horizontal ? "row" : 'column-reverse'}>
                 <Grid item xs={6} >
                     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-                    <TableContainer sx={{ maxHeight: window.innerHeight - 100}} >
+                    <TableContainer  >
                         <CardContent>
                             <Typography variant="h5" component="div">
                                 Exercise Log
                             </Typography>
                         </CardContent>
                         
-                        <Table sx={{minWidth : 500}} stickyHeader aria-label="Exercise Logs">
+                        <Table  stickyHeader aria-label="Exercise Logs">
                             <TableHead>
                                 <TableCell>Exercise</TableCell>
                                 <TableCell align="right">Date</TableCell>
@@ -187,14 +229,13 @@ export default function Dashboard(props){
                 </Grid>
                 <Grid xs={5} item >
                    
-                    <Grid item xs={12}>
                         <Card>
                             <CardContent>
                                 
                                 <CardMedia
                                     src={logo}
                                     component="img"
-                                    sx={{width : 1}}
+                                    sx={{width : 0.5}}
                                 />
                                 <Typography variant="h4" component="div">
                                     Need a break?
@@ -208,11 +249,22 @@ export default function Dashboard(props){
                                 </Button>
                                 
                             </CardActions>
-                            <CardActions>
+                            
+                            <CardContent>
                                 <Typography variant="h7" component="div">
-                                    Time to next exercise: {getTimeToNextExercise()} minutes
+                                    Exercise Schedule - {checkIfDayIncluded()}
                                 </Typography>
-                            </CardActions>
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                    <DemoContainer components={['TimePicker']}>
+                                        <TimePicker value={convertDBtimeToDate(WindowStartHour)} readOnly label="Start Receiving" />
+                                        <TimePicker value={convertDBtimeToDate(WindowEndHour)} readOnly label="End Receiving" />
+                                    </DemoContainer>
+                                </LocalizationProvider>
+                                <Typography variant="h7" component="div">
+                                    {getTimeToLastExercise()}
+                                </Typography>
+
+                            </CardContent>
                             
                             {/* <CardContent>
 
@@ -231,7 +283,7 @@ export default function Dashboard(props){
                                 </List>
                             </CardContent> */}
                         </Card>
-                    </Grid>
+                   
                     
                 </Grid>
               

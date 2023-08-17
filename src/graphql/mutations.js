@@ -8,6 +8,8 @@ export const createExerciseLog = /* GraphQL */ `
       timestamp
       exerciseName
       bodyPart
+      completed
+      timestampCompleted
       __typename
     }
   }
@@ -19,6 +21,8 @@ export const updateExerciseLog = /* GraphQL */ `
       timestamp
       exerciseName
       bodyPart
+      completed
+      timestampCompleted
       __typename
     }
   }
@@ -30,6 +34,8 @@ export const deleteExerciseLog = /* GraphQL */ `
       timestamp
       exerciseName
       bodyPart
+      completed
+      timestampCompleted
       __typename
     }
   }

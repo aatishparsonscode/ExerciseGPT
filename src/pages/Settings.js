@@ -308,10 +308,10 @@ export default function Settings(props){
                                 defaultValue={ExerciseInterval}
                                 onChange={handleIntervalSliderChange}
                                 valueLabelDisplay="auto"
-                                step={5}
+                                step={10}
                                 marks
-                                min={10}
-                                max={110}
+                                min={20}
+                                max={240}
                             />
                         </CardContent>
                     
@@ -321,8 +321,8 @@ export default function Settings(props){
                             </Typography>
                             <ButtonGroup variant="outlined" aria-label="outlined primary button group">
                                 <Button onClick={() => setDeliveryMethod("EMAIL")}>Email</Button>
-                                <Button onClick={() => setDeliveryMethod("SMS")}>SMS</Button>
-                                <Button onClick={() => setDeliveryMethod("WHATSAPP")}>WhatsApp</Button>
+                                {/* <Button onClick={() => setDeliveryMethod("SMS")}>SMS</Button>
+                                <Button onClick={() => setDeliveryMethod("WHATSAPP")}>WhatsApp</Button> */}
                             </ButtonGroup>
                             <CardContent>
                             <Typography variant="h5" component="div">
