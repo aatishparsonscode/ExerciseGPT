@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { PureComponent } from 'react';
 import Container from '@mui/material/Container';
 import Card from '@mui/material/Card';
 import List from '@mui/material/List';
@@ -25,6 +26,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import dayjs from 'dayjs';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Sector, Line } from 'recharts';
 
 import { useState, useEffect } from 'react';
 
@@ -37,6 +39,8 @@ import { updateUsersExercise } from '../graphql/mutations';
 
 import logo from '../assets/logo.png'
 
+const EXERCISES_TO_PULL = 40
+
 const fakeExerciseLog =     ["bicep","tricep","trapezius"]
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -47,11 +51,58 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary,
   }));
 
-function createData({exerciseName, timestamp}){
+function createData({exerciseName, timestamp, completed}){
     const dateObj = new Date(timestamp)
     const dateLocal = dateObj.toLocaleTimeString(undefined, {timeStyle:'short'}) + " " + dateObj.toLocaleDateString()
-    return {exerciseName, dateLocal}
+    return {exerciseName, dateLocal, completed}
 }
+
+
+const renderActiveShape = (props) => {
+    const RADIAN = Math.PI / 180;
+    const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+    const sin = Math.sin(-RADIAN * midAngle);
+    const cos = Math.cos(-RADIAN * midAngle);
+    const sx = cx + (outerRadius + 10) * cos;
+    const sy = cy + (outerRadius + 10) * sin;
+    const mx = cx + (outerRadius + 30) * cos;
+    const my = cy + (outerRadius + 30) * sin;
+    const ex = mx + (cos >= 0 ? 1 : -1) * 22;
+    const ey = my;
+    const textAnchor = cos >= 0 ? 'start' : 'end';
+  
+    return (
+      <g>
+        <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill}>
+          {payload.name}
+        </text>
+        <Sector
+          cx={cx}
+          cy={cy}
+          innerRadius={innerRadius}
+          outerRadius={outerRadius}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          fill={fill}
+        />
+        <Sector
+          cx={cx}
+          cy={cy}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          innerRadius={outerRadius + 6}
+          outerRadius={outerRadius + 10}
+          fill={fill}
+        />
+        <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" />
+        <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
+        <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="#333">{`PV ${value}`}</text>
+        <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="#999">
+          {`(Rate ${(percent * 100).toFixed(2)}%)`}
+        </text>
+      </g>
+    );
+  };
 
 export default function Dashboard(props){
     const { UserID, ExerciseInterval, LastExerciseTime, WindowStartHour, WindowEndHour,WindowDays } = props.data
@@ -61,13 +112,53 @@ export default function Dashboard(props){
     const [exerciseLogs, setExerciseLogs] = useState([])
     const [skippedBodyParts, setSkippedBodyParts] = useState([])
 
+    const [gData, setGData] = useState([])
+
+   
+
+    const removeTime = (date) => {
+        if(date == undefined){
+            return undefined
+        }
+        return date.split("M ")[1].slice(0, -5)
+    }
+
+    const constructGraphData = (data) => {
+        let formatted = new Map()
+        const dateOnly = data[0]['dateLocal'].split("PM ")[1]
+        let accumulated = 0
+        for(let obj in data){
+            const dateVal = removeTime(data[obj]['dateLocal'])
+            let toAdd = 0
+            if(data[obj]['completed']){
+                toAdd = 1
+            }
+            accumulated += toAdd
+            if(dateVal != undefined){
+                formatted.set(dateVal, formatted.has(dateVal) ? formatted.get(dateVal) + toAdd : toAdd)
+            }
+            
+            
+        }
+        let res = []
+        for (const [key, value] of formatted.entries()) {
+            res.push({name : key, Aggregate : accumulated, Completed: value})
+            accumulated = accumulated - value
+            
+        }
+        return res.reverse()
+    }
+    
+
     const navigate = useNavigate()
 
     useEffect(() => {
         // retrieve latest logs here
         async function setup(){
             console.log(UserID, "Setup UserID in Dashboard")
-            setExerciseLogs(await getExerciseLogs())
+            const logs = await getExerciseLogs()
+            setExerciseLogs(logs)
+            setGData(constructGraphData(logs))
         }
         if(UserID !== null && UserID !== undefined){
             setup()
@@ -123,7 +214,7 @@ export default function Dashboard(props){
                     filter : {
                         UserID : {"eq" : UserID}
                     },
-                    limit : 15
+                    limit : EXERCISES_TO_PULL
                     //timestamp: {between: [before, currDate]}
                 
               }
@@ -214,12 +305,12 @@ export default function Dashboard(props){
                             </TableHead>
                             <TableBody>
                                 {exerciseLogs.map((row) => (
-                                    <TableRow key={row.dateLocal}
+                                    <TableRow key={row.dateLocal} 
                                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                <TableCell component="th" scope="row" >
+                                <TableCell component="th" scope="row" style={{color :row.completed ?  "#1565C0" : null}}>
                                     {row.exerciseName}
                                 </TableCell>
-                                <TableCell align="right">{row.dateLocal}</TableCell>
+                                <TableCell align="right" style={{color :row.completed ?  "#1565C0" : null}}>{row.dateLocal}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -232,12 +323,38 @@ export default function Dashboard(props){
                         <Card>
                             <CardContent>
                                 
-                                <CardMedia
-                                    src={logo}
-                                    component="img"
-                                    sx={{width : 0.5}}
-                                />
-                                <Typography variant="h4" component="div">
+                                <Typography variant="h6" component="div">
+                                    Your last {EXERCISES_TO_PULL} movements
+                                </Typography>
+                                <ResponsiveContainer width={'100%'} height={window.innerHeight * 0.25}>
+                                    <AreaChart
+                                    width={'100%'}
+                                    height={window.innerHeight * 0.25 - 50}
+                                    data={gData}
+                                    margin={{
+                                        top: 10,
+                                        right: 30,
+                                        left: 0,
+                                        bottom: 0,
+                                    }}
+                                    >
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" />
+                                    <YAxis label={{ value: '# Movements', angle: -90, position: 'insideLeft' }}
+                                     type="number" //domain={[0, EXERCISES_TO_PULL]}
+                                    />
+                                    <Tooltip />
+                                   
+                                    
+                                    <Area type="monotone" dataKey="Aggregate" stroke="#1565C0" fill="#2196f3" />
+                                    <Area type="monotone" dataKey="Completed" stroke="#1565C0" fill="#2196f3" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                                    
+                            </CardContent>
+                            <CardContent>
+                                
+                                <Typography variant="h5" component="div">
                                     Need a break?
                                 </Typography>
                             </CardContent>
@@ -265,6 +382,8 @@ export default function Dashboard(props){
                                 </Typography>
 
                             </CardContent>
+
+                            
                             
                             {/* <CardContent>
 
@@ -283,7 +402,7 @@ export default function Dashboard(props){
                                 </List>
                             </CardContent> */}
                         </Card>
-                   
+                        
                     
                 </Grid>
               

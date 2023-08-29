@@ -100,6 +100,10 @@ export const onCreateUsersExercise = /* GraphQL */ `
       WindowEndHour
       WindowDays
       RequestedExercise
+      GoogleCalendarEnabled
+      GoogleCalendarRefreshToken
+      SlackAccessToken
+      SlackUserID
       __typename
     }
   }
@@ -122,6 +126,10 @@ export const onUpdateUsersExercise = /* GraphQL */ `
       WindowEndHour
       WindowDays
       RequestedExercise
+      GoogleCalendarEnabled
+      GoogleCalendarRefreshToken
+      SlackAccessToken
+      SlackUserID
       __typename
     }
   }
@@ -144,6 +152,10 @@ export const onDeleteUsersExercise = /* GraphQL */ `
       WindowEndHour
       WindowDays
       RequestedExercise
+      GoogleCalendarEnabled
+      GoogleCalendarRefreshToken
+      SlackAccessToken
+      SlackUserID
       __typename
     }
   }

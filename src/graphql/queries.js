@@ -95,6 +95,10 @@ export const getUsersExercise = /* GraphQL */ `
       WindowEndHour
       WindowDays
       RequestedExercise
+      GoogleCalendarEnabled
+      GoogleCalendarRefreshToken
+      SlackAccessToken
+      SlackUserID
       __typename
     }
   }
@@ -122,6 +126,10 @@ export const listUsersExercises = /* GraphQL */ `
         WindowEndHour
         WindowDays
         RequestedExercise
+        GoogleCalendarEnabled
+        GoogleCalendarRefreshToken
+        SlackAccessToken
+        SlackUserID
         __typename
       }
       nextToken

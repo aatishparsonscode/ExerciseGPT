@@ -36,10 +36,60 @@ const fakeBodyPartDifficulty = [
 
 const fakeIgnoreBodyParts = ["Joints","Trapezius","palms"]
 
+// to add google
+const GOOGLE_CALENDAR_ENDPOINT_AUTH = 'https://accounts.google.com/o/oauth2/v2/auth';
+
+// send get request with params
 
 
+function oauthSignIn() {
+    // Google's OAuth 2.0 endpoint for requesting an access token
+    var oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
+    
+    // Create <form> element to submit parameters to OAuth 2.0 endpoint.
+    var form = document.createElement('form');
+    form.setAttribute('method', 'GET'); // Send as a GET request.
+    form.setAttribute('action', oauth2Endpoint);
+    
+    // Parameters to pass to OAuth 2.0 endpoint.
+    var params = {'client_id': '333833820419-942li71j7r4j9160qiq3rrhgf6n3hl0d.apps.googleusercontent.com',
+    'redirect_uri':  'https://myofficegym.netlify.app/googlecalendarsetup', ///googlecalendarsetup', //replae with myofficegym/googlecalendarsetup
+    'response_type': 'code',
+    'scope':  'https://www.googleapis.com/auth/calendar.readonly',
+    'include_granted_scopes': 'true',
+    'state': 'pass-through value',
+    'access_type' : 'offline',
+    'prompt' : 'consent'
+    };
+    
+    // Add form parameters as hidden input values.
+    for (var p in params) {
+        var input = document.createElement('input');
+        input.setAttribute('type', 'hidden');
+        input.setAttribute('name', p);
+        input.setAttribute('value', params[p]);
+        form.appendChild(input);
+    }
+    
+    // Add form to page and submit it to open the OAuth 2.0 endpoint.
+    document.body.appendChild(form);
+    form.submit();
+    }
 export default function Settings(props){
-    const { UserID, BodyPosition, Difficulty, ExerciseInterval, IgnoreExercises, Location, DeliveryMethod, WindowStartHour, WindowEndHour,WindowDays} = props.data
+    const { UserID, 
+            BodyPosition, 
+            Difficulty, 
+            ExerciseInterval, 
+            IgnoreExercises, 
+            Location, 
+            DeliveryMethod, 
+            WindowStartHour, 
+            WindowEndHour,
+            WindowDays, 
+            GoogleCalendarEnabled,
+            GoogleCalendarRefreshToken,
+            SlackAccessToken,
+            SlackUserID} = props.data
     const  horizontal  = props.horizontal
 
     const [bodyPartDifficulty, setBodyPartDifficulty] = useState([])
@@ -58,9 +108,11 @@ export default function Settings(props){
     const [windowEndLocalUX, setWindowEndLocalUX] = useState()
     const [windowStart, setWindowStart] = useState(null)
     const [windowEnd, setWindowEnd] = useState(null)
+    const [googleCalendarEnabled, setGoogleCalendarEnabled] = useState(GoogleCalendarEnabled)
 
     useEffect(() => {
         // retrieve settings here
+        
         console.log(Difficulty)
         const parsed = Difficulty
         setBodyPartDifficulty(parsed)
@@ -77,11 +129,14 @@ export default function Settings(props){
         setWindowEndLocalUX(convertDBtimeToDate(WindowEndHour))
         setWindowStart(WindowStartHour)
         setWindowEnd(WindowEndHour)
+        setGoogleCalendarEnabled(GoogleCalendarEnabled)
+        
     },[])
 
     useEffect(() => {
         if(exerciseInterval !== null){
             setLoading(false)
+            //oauthSignIn()//integrateGoogleCalendar()
         }
     },[exerciseInterval])
 
@@ -119,6 +174,7 @@ export default function Settings(props){
         }
         setFormattedIgnoredBodyParts([...listOfObjs])
     }
+
 
     const formatExercise = (data) => {
         let listIgnore = []
@@ -161,9 +217,11 @@ export default function Settings(props){
         for(let obj in listOfObjs){
             if(item['bodyPart'] === listOfObjs[obj]['bodyPart']){
                 listOfObjs[obj]['difficulty'] = difficulty
+                listOfObjs[obj]['ignoring'] = false
             }
         }
         setFormattedBodyPartDiff([...listOfObjs])
+        
     }
 
     const getDeliveryMethod = () => {
@@ -200,7 +258,8 @@ export default function Settings(props){
                         Difficulty : convertFormattedDifficultyBackToMap(formattedBodyPartDiff),
                         WindowDays : daysChecked,
                         WindowStartHour : windowStart,
-                        WindowEndHour : windowEnd
+                        WindowEndHour : windowEnd,
+                        GoogleCalendarEnabled : googleCalendarEnabled
                     }
                   }
                 })
@@ -320,15 +379,39 @@ export default function Settings(props){
                                 Exercise delivery method
                             </Typography>
                             <ButtonGroup variant="outlined" aria-label="outlined primary button group">
-                                <Button onClick={() => setDeliveryMethod("EMAIL")}>Email</Button>
+                                <Button variant={deliveryMethod == "EMAIL" ? "contained" : "outlined"} onClick={() => setDeliveryMethod("EMAIL")}>Email</Button>
+                                <Button variant={deliveryMethod == "SLACK" ? "contained" : "outlined"} onClick={() => setDeliveryMethod("SLACK")}>Slack</Button>
                                 {/* <Button onClick={() => setDeliveryMethod("SMS")}>SMS</Button>
                                 <Button onClick={() => setDeliveryMethod("WHATSAPP")}>WhatsApp</Button> */}
                             </ButtonGroup>
-                            <CardContent>
                             <Typography variant="h5" component="div">
-                                Delivery Method: {deliveryMethod}
+                                Calendar Sync
                             </Typography>
-                            </CardContent>
+                            <ButtonGroup variant="outlined" aria-label="outlined primary button group">
+                                <Button variant={googleCalendarEnabled ? "contained" : "outlined"} onClick={() => setGoogleCalendarEnabled(!googleCalendarEnabled)}>Google Calendar</Button>
+                                
+                                {/* <Button onClick={() => setDeliveryMethod("SMS")}>SMS</Button>
+                                <Button onClick={() => setDeliveryMethod("WHATSAPP")}>WhatsApp</Button> */}
+                            </ButtonGroup>
+                        </CardContent>
+                        <CardContent>
+                            <Typography variant="h5" component="div">
+                                Integrations
+                            </Typography>
+                            <Typography variant="h6" component="div">
+                                Delivery
+                            </Typography>
+                            <ButtonGroup variant="outlined" aria-label="outlined primary button group">
+                                <Button variant={SlackAccessToken != null ? "contained" : "outlined"}  onClick={() => window.open("https://slack.com/oauth/v2/authorize?client_id=5678224005334.5691742761143&scope=chat:write,chat:write.customize,im:write&user_scope=", "_blank", "noreferrer")}>Slack</Button>
+                                
+                            </ButtonGroup>
+                            <Typography variant="h6" component="div">
+                                Calendars
+                            </Typography>
+                            <ButtonGroup variant="outlined" aria-label="outlined primary button group">
+                                <Button variant={GoogleCalendarRefreshToken ? "contained" : "outlined"} onClick={() => oauthSignIn()}>Google Calendar</Button>
+                                
+                            </ButtonGroup>
                         </CardContent>
                         <CardContent>
                             <Button variant='contained' onClick={() => updateSettings()}>
@@ -350,14 +433,15 @@ export default function Settings(props){
                                     return(
                                         <>
                                         <ListItem>
-                                            {item.bodyPart} - {item.difficulty} 
+                                            {item.bodyPart}
                                             
                                         </ListItem>
                                         <ListItem>
                                             <ButtonGroup variant="outlined" aria-label="outlined primary button group">
-                                                <Button onClick={() => changeDifficulty(item, "Easy")}>EASY</Button>
-                                                <Button onClick={() => changeDifficulty(item, "Medium")}>MEDIUM</Button>
-                                                <Button onClick={() => changeDifficulty(item, "Hard")}>HARD</Button>
+                                                <Button variant={item['difficulty'] == "Easy" ? "contained" : "outlined"} onClick={() => changeDifficulty(item, "Easy")}>EASY</Button>
+                                                <Button variant={item['difficulty'] == "Medium" ? "contained" : "outlined"} onClick={() => changeDifficulty(item, "Medium")}>MEDIUM</Button>
+                                                <Button variant={item['difficulty'] == "Hard" ? "contained" : "outlined"} onClick={() => changeDifficulty(item, "Hard")}>HARD</Button>
+                                                
                                             </ButtonGroup>
                                         </ListItem>
                                         </>
@@ -378,29 +462,33 @@ export default function Settings(props){
                     <Card>
                     <CardContent>
                             <Typography variant="h5" component="div">
-                                Body Parts Blacklisted
+                                Body Parts to Ignore
                             </Typography>
                             <List>
                                 {formattedIgnoredBodyParts.map(item => {
                                     
                                     if(item.ignoring){
                                         return(
+                                            <>
                                             <ListItem>
                                                 {item.bodyPart}
-                                                <Button onClick={() => toggleEnableDisableExercise(item)}>
-                                                     Enable
-                                                </Button>
-                                                
                                             </ListItem>
+                                            <Button variant="outlined" onClick={() => toggleEnableDisableExercise(item)}>
+                                                    Enable
+                                            </Button>
+                                            </>
                                         )
                                     }else{
                                         return(
+                                            <>
                                             <ListItem>
                                                 {item.bodyPart}
-                                                <Button onClick={() => toggleEnableDisableExercise(item)}>
+                                                
+                                            </ListItem>
+                                            <Button variant = "contained" onClick={() => toggleEnableDisableExercise(item)}>
                                                      Disable
                                                 </Button>
-                                            </ListItem>
+                                            </>
                                         )
                                     }
                                     
