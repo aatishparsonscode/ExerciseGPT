@@ -89,7 +89,9 @@ export default function Settings(props){
             GoogleCalendarEnabled,
             GoogleCalendarRefreshToken,
             SlackAccessToken,
-            SlackUserID} = props.data
+            SlackUserID,
+            Movement
+            } = props.data
     const  horizontal  = props.horizontal
 
     const [bodyPartDifficulty, setBodyPartDifficulty] = useState([])
@@ -109,6 +111,7 @@ export default function Settings(props){
     const [windowStart, setWindowStart] = useState(null)
     const [windowEnd, setWindowEnd] = useState(null)
     const [googleCalendarEnabled, setGoogleCalendarEnabled] = useState(GoogleCalendarEnabled)
+    const [movement, setMovement] = useState("EXERCISE")
 
     useEffect(() => {
         // retrieve settings here
@@ -130,6 +133,9 @@ export default function Settings(props){
         setWindowStart(WindowStartHour)
         setWindowEnd(WindowEndHour)
         setGoogleCalendarEnabled(GoogleCalendarEnabled)
+        if(Movement != undefined && Movement != null){
+            setMovement(Movement)
+        }
         
     },[])
 
@@ -241,7 +247,7 @@ export default function Settings(props){
     }
 
     const updateSettings = async () => {
-        if(windowStart < windowEnd){
+        if(windowStart < windowEnd || true){
             await fetch(awsExports.aws_appsync_graphqlEndpoint, {
                 method : 'POST',
                 headers: {'Content-Type': 'application/json',
@@ -259,7 +265,8 @@ export default function Settings(props){
                         WindowDays : daysChecked,
                         WindowStartHour : windowStart,
                         WindowEndHour : windowEnd,
-                        GoogleCalendarEnabled : googleCalendarEnabled
+                        GoogleCalendarEnabled : googleCalendarEnabled,
+                        Movement : movement
                     }
                   }
                 })
@@ -302,6 +309,7 @@ export default function Settings(props){
         const eventDateJS = event.toDate()
         eventDateJS.setUTCDate(new Date().getUTCDate())
         setWindowEnd(getHourMinsFromUTC(eventDateJS))
+        
         console.log("handle event change end")
         setWindowEndLocalUX(copyEvent)
     }
@@ -361,7 +369,7 @@ export default function Settings(props){
                         </CardContent>
                         <CardContent>
                             <Typography variant="h5" component="div">
-                                Duration between exercises
+                                Duration between movements
                             </Typography>
                             <Slider aria-label="Temperature"
                                 defaultValue={ExerciseInterval}
@@ -372,6 +380,18 @@ export default function Settings(props){
                                 min={20}
                                 max={240}
                             />
+                        </CardContent>
+                        <CardContent>
+                            <Typography variant="h5" component="div">
+                                Movement Type
+                            </Typography>
+                            <ButtonGroup variant="outlined" aria-label="outlined primary button group">
+                                <Button variant={movement == "EXERCISE" ? "contained" : "outlined"} onClick={() => setMovement("EXERCISE")}>Exercise</Button>
+                                <Button variant={movement == "STRETCH" ? "contained" : "outlined"} onClick={() => setMovement("STRETCH")}>Stretch</Button>
+                                <Button variant={movement == "YOGA" ? "contained" : "outlined"} onClick={() => setMovement("YOGA")}>Yoga</Button>
+                                {/* <Button onClick={() => setDeliveryMethod("SMS")}>SMS</Button>
+                                <Button onClick={() => setDeliveryMethod("WHATSAPP")}>WhatsApp</Button> */}
+                            </ButtonGroup>
                         </CardContent>
                     
                         <CardContent>

@@ -183,7 +183,8 @@ function App({ signOut, user }) {
             WindowStartHour: WindowStartSummed,
             WindowEndHour: WindowEndSummed,
             WindowDays: [false, true,true,true,true,true,false], //Weekdays only
-            RequestedExercise: false
+            RequestedExercise: false,
+            Movement: "EXERCISE"
           } 
         }
       })

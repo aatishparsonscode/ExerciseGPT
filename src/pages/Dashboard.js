@@ -189,9 +189,9 @@ export default function Dashboard(props){
         const hours = Math.floor(res/60)
         const mins = res % 60
         if(hours > 0){
-            return "Time since last exercise: " + hours + " hour(s) " + mins + " minutes"
+            return "Time since last movement: " + hours + " hour(s) " + mins + " minutes"
         }else{
-            return "Time since last exercise: " + mins + " minutes"
+            return "Time since last movement: " + mins + " minutes"
         }
     }
 
@@ -294,13 +294,13 @@ export default function Dashboard(props){
                     <TableContainer  >
                         <CardContent>
                             <Typography variant="h5" component="div">
-                                Exercise Log
+                                Movement Log
                             </Typography>
                         </CardContent>
                         
                         <Table  stickyHeader aria-label="Exercise Logs">
                             <TableHead>
-                                <TableCell>Exercise</TableCell>
+                                <TableCell>Movement</TableCell>
                                 <TableCell align="right">Date</TableCell>
                             </TableHead>
                             <TableBody>
@@ -369,7 +369,7 @@ export default function Dashboard(props){
                             
                             <CardContent>
                                 <Typography variant="h7" component="div">
-                                    Exercise Schedule - {checkIfDayIncluded()}
+                                    Movement Schedule - {checkIfDayIncluded()}
                                 </Typography>
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                                     <DemoContainer components={['TimePicker']}>

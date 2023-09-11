@@ -104,6 +104,7 @@ export const onCreateUsersExercise = /* GraphQL */ `
       GoogleCalendarRefreshToken
       SlackAccessToken
       SlackUserID
+      Movement
       __typename
     }
   }
@@ -130,6 +131,7 @@ export const onUpdateUsersExercise = /* GraphQL */ `
       GoogleCalendarRefreshToken
       SlackAccessToken
       SlackUserID
+      Movement
       __typename
     }
   }
@@ -156,6 +158,7 @@ export const onDeleteUsersExercise = /* GraphQL */ `
       GoogleCalendarRefreshToken
       SlackAccessToken
       SlackUserID
+      Movement
       __typename
     }
   }

@@ -99,6 +99,7 @@ export const getUsersExercise = /* GraphQL */ `
       GoogleCalendarRefreshToken
       SlackAccessToken
       SlackUserID
+      Movement
       __typename
     }
   }
@@ -130,6 +131,7 @@ export const listUsersExercises = /* GraphQL */ `
         GoogleCalendarRefreshToken
         SlackAccessToken
         SlackUserID
+        Movement
         __typename
       }
       nextToken
