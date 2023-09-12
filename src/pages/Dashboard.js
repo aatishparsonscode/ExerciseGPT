@@ -361,7 +361,7 @@ export default function Dashboard(props){
                             <CardActions>
                                 <Button variant="contained" onClick={() => requestExerciseEarly()}>
                                     <Typography variant="h7" component="div">
-                                    Request Your Next Exercise
+                                    Request Your Next Movement
                                     </Typography>
                                 </Button>
                                 
@@ -381,6 +381,12 @@ export default function Dashboard(props){
                                     {getTimeToLastExercise()}
                                 </Typography>
 
+                            </CardContent>
+                            <CardContent>
+                                <Typography variant="h6" component="div">
+                                    Setup Guide
+                                </Typography>
+                                <iframe src="https://www.loom.com/embed/a709405918cf47b7b504c0fdc8cdba4c?sid=1f0e34c2-a57a-49e3-b1e3-d0a9e0d7c19d" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen width={horizontal ? 640 : 300} height={horizontal ? 400 : 200}></iframe>
                             </CardContent>
                             <CardContent>
                             <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeS7TypPDTjeniHjAQ8uWqlNKrLl1Pg5Mizj9wP7Hebu55Hkw/viewform?embedded=true" width="640" height="1359" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
