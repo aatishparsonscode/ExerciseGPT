@@ -18,6 +18,7 @@ import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import TextField from '@mui/material/TextField';
 
 import { useState, useEffect } from 'react';
 import { CardContent, Typography } from '@mui/material';
@@ -90,7 +91,8 @@ export default function Settings(props){
             GoogleCalendarRefreshToken,
             SlackAccessToken,
             SlackUserID,
-            Movement
+            Movement,
+            Email
             } = props.data
     const  horizontal  = props.horizontal
 
@@ -102,6 +104,7 @@ export default function Settings(props){
     const [exerciseInterval, setExerciseInterval] = useState(null)
     const [bodyPosition, setBodyPosition] = useState(null)
     const [location, setLocation] = useState(null)
+    
 
     const [loading, setLoading] = useState(true)
 
@@ -112,6 +115,7 @@ export default function Settings(props){
     const [windowEnd, setWindowEnd] = useState(null)
     const [googleCalendarEnabled, setGoogleCalendarEnabled] = useState(GoogleCalendarEnabled)
     const [movement, setMovement] = useState("EXERCISE")
+    const [email, setEmail] = useState()
 
     useEffect(() => {
         // retrieve settings here
@@ -133,6 +137,7 @@ export default function Settings(props){
         setWindowStart(WindowStartHour)
         setWindowEnd(WindowEndHour)
         setGoogleCalendarEnabled(GoogleCalendarEnabled)
+        setEmail(Email)
         if(Movement != undefined && Movement != null){
             setMovement(Movement)
         }
@@ -266,7 +271,8 @@ export default function Settings(props){
                         WindowStartHour : windowStart,
                         WindowEndHour : windowEnd,
                         GoogleCalendarEnabled : googleCalendarEnabled,
-                        Movement : movement
+                        Movement : movement,
+                        Email : email
                     }
                   }
                 })
@@ -333,12 +339,19 @@ export default function Settings(props){
         
     }
 
+    const handleEmailChange = (event) => {
+        setEmail(event.target.value)
+    }
+
     if(loading){
         return(
             <p>Loading...</p>
         )
     }
     console.log(windowStartLocalUX, windowEndLocalUX)
+
+    
+
     return(
         <Box sx={{flexGrow : 1}}>
             <Grid container spacing={2} columnSpacing={5} direction = {horizontal ? "row" : 'column'}>
@@ -387,8 +400,8 @@ export default function Settings(props){
                             </Typography>
                             <ButtonGroup variant="outlined" aria-label="outlined primary button group">
                                 <Button variant={movement == "EXERCISE" ? "contained" : "outlined"} onClick={() => setMovement("EXERCISE")}>Exercise</Button>
-                                <Button variant={movement == "STRETCH" ? "contained" : "outlined"} onClick={() => setMovement("STRETCH")}>Stretch</Button>
-                                <Button variant={movement == "YOGA" ? "contained" : "outlined"} onClick={() => setMovement("YOGA")}>Yoga</Button>
+                                {/* <Button variant={movement == "STRETCH" ? "contained" : "outlined"} onClick={() => setMovement("STRETCH")}>Stretch</Button>
+                                <Button variant={movement == "YOGA" ? "contained" : "outlined"} onClick={() => setMovement("YOGA")}>Yoga</Button> */}
                                 {/* <Button onClick={() => setDeliveryMethod("SMS")}>SMS</Button>
                                 <Button onClick={() => setDeliveryMethod("WHATSAPP")}>WhatsApp</Button> */}
                             </ButtonGroup>
@@ -398,9 +411,16 @@ export default function Settings(props){
                             <Typography variant="h5" component="div">
                                 Exercise delivery method
                             </Typography>
+                            <Box component="form">
+                            <TextField id="outlined-basic" label="Email to deliver to" variant="standard" value={email} onChange={handleEmailChange} />
+                            </Box>
                             <ButtonGroup variant="outlined" aria-label="outlined primary button group">
                                 <Button variant={deliveryMethod == "EMAIL" ? "contained" : "outlined"} onClick={() => setDeliveryMethod("EMAIL")}>Email</Button>
-                                <Button variant={deliveryMethod == "SLACK" ? "contained" : "outlined"} onClick={() => setDeliveryMethod("SLACK")}>Slack</Button>
+                                {SlackAccessToken != null ?
+                                    <Button variant={deliveryMethod == "SLACK" ? "contained" : "outlined"} onClick={() => setDeliveryMethod("SLACK")}>Slack</Button>
+                                : 
+                                    null
+                                }
                                 {/* <Button onClick={() => setDeliveryMethod("SMS")}>SMS</Button>
                                 <Button onClick={() => setDeliveryMethod("WHATSAPP")}>WhatsApp</Button> */}
                             </ButtonGroup>
@@ -408,8 +428,11 @@ export default function Settings(props){
                                 Calendar Sync
                             </Typography>
                             <ButtonGroup variant="outlined" aria-label="outlined primary button group">
-                                <Button variant={googleCalendarEnabled ? "contained" : "outlined"} onClick={() => setGoogleCalendarEnabled(!googleCalendarEnabled)}>Google Calendar</Button>
-                                
+                                {GoogleCalendarRefreshToken ?
+                                    <Button variant={googleCalendarEnabled ? "contained" : "outlined"} onClick={() => setGoogleCalendarEnabled(!googleCalendarEnabled)}>Google Calendar</Button>
+                                :
+                                    null
+                                }
                                 {/* <Button onClick={() => setDeliveryMethod("SMS")}>SMS</Button>
                                 <Button onClick={() => setDeliveryMethod("WHATSAPP")}>WhatsApp</Button> */}
                             </ButtonGroup>
