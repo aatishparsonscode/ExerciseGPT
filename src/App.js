@@ -5,12 +5,13 @@ import '@aws-amplify/ui-react/styles.css';
 import { getExerciseLog, getExercisesGPT, getUsersExercise, listExerciseLogs, listExercisesGPTS, listUsersExercises } from './graphql/queries';
 import { createUsersExercise } from './graphql/mutations';
 import awsExports from './aws-exports';
-import { Routes, Route, BrowserRouter } from 'react-router-dom'; //INSTALL WHEN INTERNET EXISTS
+import { Routes, Route, HashRouter } from 'react-router-dom'; //INSTALL WHEN INTERNET EXISTS
 import { useState } from 'react';
 
 // pages
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
+import Help from './pages/Help'
 import { useEffect } from 'react';
 import Tab from '@mui/material/Tab'
 import Box from '@mui/material/Box'
@@ -24,6 +25,7 @@ import {BODY_PARTS_DEFAULT_DIFFICULTY} from './bodyParts'
 
 import SlackSetup from './pages/SlackSetup';
 import GoogleCalendarSetup from './pages/GoogleCalendarSetup';
+import OutlookCalendarSetup from './pages/OutlookCalendarSetup';
 
 Amplify.configure(awsExports);
 
@@ -73,6 +75,8 @@ function a11yProps(index) {
 function App({ signOut, user }) {
   const {sub, email} = user.attributes
   // get data if user exists, if not set data and get in same request
+
+  
   
   const [value, setValue] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -103,11 +107,13 @@ function App({ signOut, user }) {
         }
         setUserPulledData(userData)
         console.log(userData, "After setup data")
+        
       }
       
 
       // Difficulty will be stringified!
     }
+
     if(sub !== null){
       //signOut()
       console.log("running setup", sub, email)
@@ -173,7 +179,7 @@ function App({ signOut, user }) {
             BodyPosition : "Standing",
             Difficulty : BODY_PARTS_DEFAULT_DIFFICULTY, 
             Email : email,
-            ExerciseInterval : 60,
+            ExerciseInterval : 90,
             IgnoreExercises : [],
             LastExerciseTime : 0,
             Location : "office",
@@ -232,14 +238,17 @@ else{
               />
             <Tab label="Settings" {...a11yProps(0)}
               />
-            {/* <Tab label="Payments" {...a11yProps(0)}
-              /> */}
+            <Tab label="Help" {...a11yProps(0)}
+              />
           </Tabs>
           <CustomTabPanel value={value} index={0}>
             <Dashboard data={userPulledData} horizontal = {isHorizontal}/>
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
             <Settings data={userPulledData} horizontal = {isHorizontal}/>
+          </CustomTabPanel>
+          <CustomTabPanel value={value} index={2}>
+            <Help data={userPulledData} horizontal = {isHorizontal}/>
           </CustomTabPanel>
         </Box>
           {/* <Routes>
@@ -250,8 +259,8 @@ else{
       />
       <Route path='slacksetup' element={<SlackSetup UserID = {sub}/>}></Route>
       <Route path='googlecalendarsetup' element={<GoogleCalendarSetup UserID = {sub}/>}></Route>
+      <Route path='outlookcalendarsetup' element={<OutlookCalendarSetup UserID = {sub}/>}></Route>
     </Routes>
-    
   );
 }
 }

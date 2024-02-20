@@ -26,7 +26,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import dayjs from 'dayjs';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Sector, Line } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Sector, Line, PieChart,Pie, Cell } from 'recharts';
 
 import { useState, useEffect } from 'react';
 
@@ -39,9 +39,20 @@ import { updateUsersExercise } from '../graphql/mutations';
 
 import logo from '../assets/logo.png'
 
+const baseUrl = "https://hqik9jtqxj.execute-api.us-west-2.amazonaws.com/Dev/"
+const API_KEY = "9Cbb8AR3De5ZDINOBgxa02ICzOd7az8k8z2DvvCN"
+
 const EXERCISES_TO_PULL = 40
 
 const fakeExerciseLog =     ["bicep","tricep","trapezius"]
+
+const data = [
+    { name: 'Group A', value: 400 },
+    { name: 'Group B', value: 300 },
+    { name: 'Group C', value: 300 },
+    { name: 'Group D', value: 200 },
+  ];
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -114,6 +125,9 @@ export default function Dashboard(props){
 
     const [gData, setGData] = useState([])
 
+    const [freeBusyData, setFreeBusyData] = useState([])
+    const [freeBusyDataOutlook, setFreeBusyDataOutlook] = useState([])
+    const [summary, setSummary] = useState({})
    
 
     const removeTime = (date) => {
@@ -157,8 +171,14 @@ export default function Dashboard(props){
         async function setup(){
             console.log(UserID, "Setup UserID in Dashboard")
             const logs = await getExerciseLogs()
+            const stats = await getUserSummary()
             setExerciseLogs(logs)
+            setSummary(stats)
             setGData(constructGraphData(logs))
+            let dataFB = await getFreeBusy(UserID)
+            let dataFBOutlook = await getFreeBusyOutlook(UserID)
+            setFreeBusyData(dataFB)
+            setFreeBusyDataOutlook(dataFBOutlook)
         }
         if(UserID !== null && UserID !== undefined){
             setup()
@@ -193,6 +213,22 @@ export default function Dashboard(props){
         }else{
             return "Time since last movement: " + mins + " minutes"
         }
+    }
+
+    const getUserSummary = async () => {
+        let data = null
+        await fetch(baseUrl + "userdata?userID=" + UserID,{
+            method:"GET",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'x-api-key': API_KEY
+                }
+        }).then(async res => {
+            data = (await res.json())
+            console.log(data)
+        })
+        return data
     }
 
     const getExerciseLogs = async () => {
@@ -284,6 +320,61 @@ export default function Dashboard(props){
         }
     }
 
+   
+
+    const getFreeBusy = async (UserID) => {
+        let result = []
+        await fetch('https://hqik9jtqxj.execute-api.us-west-2.amazonaws.com/Dev/gcalendarsync?userID=' + UserID, {
+            method : 'GET',
+            headers: {'Content-Type': 'application/json',
+                      'x-api-key' : '9Cbb8AR3De5ZDINOBgxa02ICzOd7az8k8z2DvvCN',
+                      'Accept': 'application/json'
+                    }
+            
+          }).then(async res => {
+            try{
+                result = (await res.json()).freeBusyBlocks
+            }catch(e){
+                console.log("Could not retrieve free busy")
+            }
+            
+            
+          })
+          console.log(result)
+          return result
+    }
+
+    const getFreeBusyOutlook = async (UserID) => {
+        let result = []
+        await fetch('https://hqik9jtqxj.execute-api.us-west-2.amazonaws.com/Dev/ocalendarsync?userID=' + UserID, {
+            method : 'GET',
+            headers: {'Content-Type': 'application/json',
+                      'x-api-key' : '9Cbb8AR3De5ZDINOBgxa02ICzOd7az8k8z2DvvCN',
+                      'Accept': 'application/json'
+                    }
+            
+          }).then(async res => {
+            try{
+                result = (await res.json()).freeBusyBlocks
+            }catch(e){
+                console.log("Could not retrieve free busy")
+            }
+            
+            
+          })
+          console.log(result)
+          return result
+    }
+
+    const translateUTCtoComponent = (blocks) => {
+        return (blocks.map(block => {
+            <Typography>
+                {block.start} hello
+            </Typography>
+        })
+        )
+    }
+
     
     console.log("IS HORIZONTAL", horizontal)
     return(
@@ -350,6 +441,23 @@ export default function Dashboard(props){
                                     <Area type="monotone" dataKey="Completed" stroke="#1565C0" fill="#2196f3" />
                                     </AreaChart>
                                 </ResponsiveContainer>
+                                {/* <PieChart width={400} height={400}>
+                                    <Pie
+                                    data={data}
+                                    cx={120}
+                                    cy={200}
+                                    innerRadius={60}
+                                    outerRadius={80}
+                                    fill="#8884d8"
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                    >
+                                    {data.map((entry, index) => (
+                                        <Cell display={<text color='black'>hi</text>} key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                    </Pie>
+                                    
+                                </PieChart> */}
                                     
                             </CardContent>
                             <CardContent>
@@ -383,13 +491,54 @@ export default function Dashboard(props){
 
                             </CardContent>
                             <CardContent>
-                                <Typography variant="h6" component="div">
-                                    Setup Guide
+                                <Typography>
+                                    Your Busy Times
                                 </Typography>
-                                <iframe src="https://www.loom.com/embed/a709405918cf47b7b504c0fdc8cdba4c?sid=1f0e34c2-a57a-49e3-b1e3-d0a9e0d7c19d" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen width={horizontal ? 640 : 300} height={horizontal ? 400 : 200}></iframe>
+                                <Typography>
+                                    {freeBusyData.map(block => (
+                                        <Typography>
+                                          
+                                            {new Date(block.start).toLocaleDateString([], {month: 'long', day: 'numeric'}) +", " + new Date(block.start).toLocaleTimeString([], {timeStyle: 'short'}) + " - " + new Date(block.end).toLocaleTimeString([], {timeStyle:'short'})}
+                                            
+                                        </Typography>
+                                    ))}
+                                </Typography>
+                                <Typography>
+                                    {freeBusyDataOutlook.map(block => (
+                                        <Typography>
+                                          
+                                            {new Date(block.start).toLocaleDateString([], {month: 'long', day: 'numeric'}) +", " + new Date(block.start).toLocaleTimeString([], {timeStyle: 'short'}) + " - " + new Date(block.end).toLocaleTimeString([], {timeStyle:'short'})}
+                                            
+                                        </Typography>
+                                    ))}
+                                </Typography>
                             </CardContent>
                             <CardContent>
-                            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeS7TypPDTjeniHjAQ8uWqlNKrLl1Pg5Mizj9wP7Hebu55Hkw/viewform?embedded=true" width="640" height="1359" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+                                <Button variant="contained" onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSeS7TypPDTjeniHjAQ8uWqlNKrLl1Pg5Mizj9wP7Hebu55Hkw/viewform?usp=sf_link")}>
+                                    <Typography variant="h7" component="div">
+                                    Feedback Form
+                                    </Typography>
+                                </Button>
+                            </CardContent>
+                            <CardContent>
+                                
+                                <Typography variant="h6" component="div">
+                                    <b>If you did an integration, first reload, then confirm it in settings!</b>
+                                </Typography>
+                                <Typography variant="h6" component="div">
+                                    <b>New? Head over to Settings!</b>
+                                </Typography>
+                            </CardContent>
+                            
+                            <CardContent>
+                                {/* <Typography variant="h6" component="div">
+                                    Setup Guide
+                                </Typography> */}
+                                {/* <iframe src="https://www.loom.com/embed/a709405918cf47b7b504c0fdc8cdba4c?sid=1f0e34c2-a57a-49e3-b1e3-d0a9e0d7c19d" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen width={horizontal ? 640 : 300} height={horizontal ? 400 : 200}></iframe> */}
+                            </CardContent>
+                            <CardContent>
+                            {/* <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeS7TypPDTjeniHjAQ8uWqlNKrLl1Pg5Mizj9wP7Hebu55Hkw/viewform?embedded=true" width="640" height="1359" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe> */}
+                            
                             </CardContent>
                             
                             

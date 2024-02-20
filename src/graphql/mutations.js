@@ -132,6 +132,8 @@ export const updateUsersExercise = /* GraphQL */ `
       SlackAccessToken
       SlackUserID
       Movement
+      OutlookCalendarEnabled
+      OutlookCalendarRefreshToken
       __typename
     }
   }

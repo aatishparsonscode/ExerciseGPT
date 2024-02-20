@@ -100,6 +100,10 @@ export const getUsersExercise = /* GraphQL */ `
       SlackAccessToken
       SlackUserID
       Movement
+      DesktopConnectionID
+      DesktopLive
+      OutlookCalendarEnabled
+      OutlookCalendarRefreshToken
       __typename
     }
   }

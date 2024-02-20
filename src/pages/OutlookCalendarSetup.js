@@ -9,10 +9,10 @@ const API_KEY = "9Cbb8AR3De5ZDINOBgxa02ICzOd7az8k8z2DvvCN"
 
 //const GOOGLE_OPENID_URL = "https://oauth2.googleapis.com/token" //"https://oauth2.googleapis.com/connect/token"
 
-export const sendGoogleCode = async(code, userID) => {
-    console.log("Sending Gateway request")
+export const sendOutlookCode = async(code, userID) => {
+    console.log("Sending Gateway request: ",code, userID)
     let data = null
-    await fetch(baseUrl + "gcalendar",{
+    await fetch(baseUrl + "ocalendar",{
         method:"POST",
         headers: {
             'Accept': 'application/json',
@@ -24,8 +24,8 @@ export const sendGoogleCode = async(code, userID) => {
                 code : code,
                 userID : userID
             }),
-            name: "ExecutingGoogleAuth" + userID,
-            stateMachineArn : "arn:aws:states:us-west-2:618584891789:stateMachine:GoogleCalendarAuth"
+            name: "ExecutingOutlookAuth" + userID,
+            stateMachineArn : "arn:aws:states:us-west-2:618584891789:stateMachine:OutlookCalendarAuth"
             
         })
     }).then(async res => {
@@ -37,7 +37,7 @@ export const sendGoogleCode = async(code, userID) => {
 // todo: create link to google sign in in my office gym
 // route to this page to complete setup
 
-export default function GoogleCalendarSetup(props){
+export default function OutlookCalendarSetup(props){
     const [success, setSuccess] = useState("")
 
     const navigate = useNavigate()
@@ -51,8 +51,9 @@ export default function GoogleCalendarSetup(props){
         async function processCode(code){
             if(code!== "null" && code !== null && UserID != null){
                 //get refresh token
-                const gRes = await sendGoogleCode(code, UserID)
-                console.log(gRes)
+                
+                const oRes = await sendOutlookCode(code, UserID)
+                console.log(oRes)
                 setSuccess("Success!")
                 alert("After you are redirected to the main website please RELOAD, thank you!")
                 navigate('/', {reload : true})
@@ -64,6 +65,7 @@ export default function GoogleCalendarSetup(props){
             }
             
         }
+        console.log(searchParams, "search params outlook cal")
         const code = searchParams.get("code")
         if(code != null && UserID != null){
             processCode(code)
@@ -79,7 +81,7 @@ export default function GoogleCalendarSetup(props){
     console.log(searchParams.get("code"))
     return(
         <div>
-            <p>Google Calendar Integration...{success}</p>
+            <p>Outlook Calendar Integration...{success}</p>
             {success != "" ? 
             <div>
                 <p>You should be redirected soon, if not click below</p>
