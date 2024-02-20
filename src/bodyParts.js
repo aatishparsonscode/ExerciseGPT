@@ -7,7 +7,7 @@ export const BODY_PARTS_DEFAULT_DIFFICULTY = {
     "Rhomboids": "Easy",
     "Pectoralis_major": "Easy",
     "Deltoids": "Easy",
-    "Rotator_cuff_muscles": "Easy",
+    "Rotator_Cuff_Muscles": "Easy",
     "Biceps": "Easy",
     "Triceps": "Easy",
     "Rectus_abdominis": "Easy",

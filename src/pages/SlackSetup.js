@@ -50,7 +50,8 @@ export default function SlackSetup(props){
                 // lambda saves user data and then returns success or fail
                 await sendSlackCode(code, UserID)
                 setSuccess("Success!")
-                navigate('/')
+                alert("After you are redirected to the main website please RELOAD, thank you!")
+                navigate('/', {reload : true})
             }
             
         }
@@ -71,7 +72,7 @@ export default function SlackSetup(props){
             {success != "" ? 
             <div>
                 <p>You should be redirected soon, if not click below</p>
-                <button style={{display: "inline-block", borderRadius: "500px", lineHeight: "1", fontSize: "14px", height: "38px"}} onClick={() => navigate('/')}>MyOfficeGym</button>
+                <button style={{display: "inline-block", borderRadius: "500px", lineHeight: "1", fontSize: "14px", height: "38px"}} onClick={() => navigate('/', {reload : true})}>MyOfficeGym</button>
             </div>
                     :
                 null
